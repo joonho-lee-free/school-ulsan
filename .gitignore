@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+.env
+firebase-key.json
+.DS_Store
+*.log
+node_modules/ 
+.next/ 
+firebase-key.json 

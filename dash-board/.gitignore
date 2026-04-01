@@ -1,0 +1,9 @@
+# Firebase secret key
+firebase-key.json
+
+# Node modules
+node_modules
+
+# Build output
+.next
+out
