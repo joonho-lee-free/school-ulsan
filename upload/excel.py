@@ -58,7 +58,7 @@ def merge_contract_price(order_file_path, price_file_path, output_dir):
     return output_path
 
 if __name__ == "__main__":
-    base_dir = Path("C:/school/upload")
+    base_dir = Path("C:/school-ulsan/upload")
     output_dir = base_dir / "excel"
 
     # 모든 발주서 파일 처리

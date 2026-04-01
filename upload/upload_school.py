@@ -21,7 +21,7 @@ def extract_school_info_from_pdf_text(text: str, pdf_name: str):
     def extract_address():
         text_joined = " ".join(lines)
         text_joined = re.sub(r"[^\w가-힣0-9\s\-()]", " ", text_joined)
-        match = re.search(r"(부산광역시.*?학교)", text_joined)
+        match = re.search(r"(울산광역시.*?학교)", text_joined)
         return match.group(1).strip() if match else ""
 
     info["대표"] = "학교장"
@@ -70,11 +70,11 @@ def safe_parse_date(raw, 연월):
     except:
         return None
 
-cred = credentials.Certificate("C:/school/key/firebase-key.json")
+cred = credentials.Certificate("C:/school-ulsan/key/firebase-key.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-base_dir = Path("C:/school/upload")
+base_dir = Path("C:/school-ulsan/upload")
 excel_dir = base_dir / "excel"
 pdf_info_map = load_pdf_info_map(excel_dir)
 

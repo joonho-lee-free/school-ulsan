@@ -1,4 +1,3 @@
-
 // /pages/index.tsx
 import React, { useEffect, useState } from "react";
 import Head from "next/head";
@@ -7,7 +6,7 @@ import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import Calendar from "../components/calendar";
 import Modal from "../components/modal";
 import { ScheduleObj, DocData, VendorData } from "../types";
-import { withAuth } from "../utils/withAuth"; // ✅ 이 줄 추가
+import { withAuth } from "../utils/withAuth";
 import {
   format,
   startOfMonth,
@@ -19,19 +18,22 @@ import {
 
 // Excel 다운로드 함수 (Modal에서 사용)
 const handleExcelDownload = (modalDate: string, modalDoc: DocData) => {
-  const headers = ['품목', '수량', '계약단가', '공급가액'];
+  const headers = ["품목", "수량", "계약단가", "공급가액"];
   const items = modalDoc.품목.filter((it) => it.납품[modalDate]);
   const dataRows = items.map((it) => {
     const d = it.납품[modalDate];
     return [it.식품명, d.수량, d.계약단가, d.공급가액];
   });
-  const bom = '\uFEFF';
+  const bom = "\uFEFF";
   const csvContent = bom + [headers, ...dataRows]
-    .map((row) => row.map((f) => `"${String(f).replace(/"/g, '""')}"`).join(","))
+    .map((row) =>
+      row.map((f) => `"${String(f).replace(/"/g, '""')}"`).join(",")
+    )
     .join("\n");
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = `${modalDate}-거래명세표.csv`;
   a.click();
@@ -41,6 +43,7 @@ const handleExcelDownload = (modalDate: string, modalDoc: DocData) => {
 function Index() {
   const now = new Date();
   const defaultYM = format(now, "yyyy-MM");
+
   const [selectedYM, setSelectedYM] = useState(defaultYM);
   const [selectedVendor, setSelectedVendor] = useState<string>("전체");
   const [calendarData, setCalendarData] = useState<Record<string, ScheduleObj[]>>({});
@@ -52,17 +55,24 @@ function Index() {
 
   useEffect(() => {
     const ymCode = selectedYM.replace("-", "").slice(2);
+
     const fetchData = async () => {
       const snap = await getDocs(collection(db, "school"));
       const temp: Record<string, ScheduleObj[]> = {};
+      const allowedVendors = ["파인컴퍼니", "에스제이컴퍼니"];
       const vendorSet = new Set<string>();
 
       for (const docSnap of snap.docs) {
         const id = docSnap.id;
         if (!id.startsWith(ymCode)) continue;
+
         const data = docSnap.data() as any;
         const school = data.발주처;
-        const vendor = data.낙찰기업 || data.납찰기업;
+        const vendor = data.낙찰기업 || data.납찰기업 || "";
+
+        // 울산 사이트는 허용 업체만 표시
+        if (!allowedVendors.includes(vendor)) continue;
+
         vendorSet.add(vendor);
 
         (data.품목 || []).forEach((item: any) => {
@@ -82,24 +92,41 @@ function Index() {
       }
 
       setCalendarData(temp);
-      const allVendors = Array.from(vendorSet).sort((a, b) => a.localeCompare(b));
-      setVendors(["전체", ...allVendors]);
+
+      const filteredVendors = Array.from(vendorSet).sort((a, b) =>
+        a.localeCompare(b)
+      );
+      setVendors(["전체", ...filteredVendors]);
     };
+
     fetchData();
   }, [selectedYM]);
 
   const handleClick = async (school: string, vendor: string, date: string) => {
     setModalDate(date);
     const ymCode = selectedYM.replace("-", "").slice(2);
+
     const schoolSnap = await getDoc(doc(db, "school", `${ymCode}_${school}`));
-    if (schoolSnap.exists()) setModalDoc(schoolSnap.data() as DocData);
+    if (schoolSnap.exists()) {
+      setModalDoc(schoolSnap.data() as DocData);
+    } else {
+      setModalDoc(null);
+    }
+
     const vendorSnap = await getDoc(doc(db, "school", vendor));
-    if (vendorSnap.exists()) setModalVendorDoc(vendorSnap.data() as VendorData);
+    if (vendorSnap.exists()) {
+      setModalVendorDoc(vendorSnap.data() as VendorData);
+    } else {
+      setModalVendorDoc(null);
+    }
+
     setModalOpen(true);
   };
 
   const year = +selectedYM.slice(0, 4);
-  const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
+  const months = Array.from({ length: 12 }, (_, i) =>
+    String(i + 1).padStart(2, "0")
+  );
   const firstOfMonth = parse(`${selectedYM}-01`, "yyyy-MM-dd", now);
   const start = startOfMonth(firstOfMonth);
   const end = endOfMonth(start);
@@ -138,11 +165,11 @@ function Index() {
           modalDoc={modalDoc}
           modalVendorDoc={modalVendorDoc}
           onClose={() => setModalOpen(false)}
-          handleExcelDownload={() => handleExcelDownload(modalDate, modalDoc!)}
+          handleExcelDownload={() => handleExcelDownload(modalDate, modalDoc)}
         />
       )}
     </>
   );
 }
 
-export default withAuth(Index); // ✅ 로그인 보호 적용
+export default withAuth(Index);
