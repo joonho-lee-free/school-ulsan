@@ -14,12 +14,12 @@ import { ScheduleObj } from "../types";
 const getKg = (수량: number) => `${수량}kg`;
 
 // ✅ 기존 우선순위 유지
-const vendorPriority = ["이가에프엔비", "에스에이치유통"];
+const vendorPriority = ["이가에프엔비", "에스에이치유통", "파인컴퍼니", "에스제이컴퍼니"];
 
 // ✅ 업체별 색상 맵 (Tailwind 동적 class 문제 회피: inline style로 적용)
 const VENDOR_COLOR_MAP: Record<string, string> = {
-  "이가에프엔비": "#000000", // 파랑
-  "에스에이치유통": "#1900ff", // 초록
+  "파인컴퍼니": "#000000", // 파랑
+  "에스제이컴퍼니": "#1900ff", // 초록
 };
 
 interface CalendarProps {
