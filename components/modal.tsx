@@ -18,6 +18,10 @@ const Modal: React.FC<ModalProps> = ({
   onClose,
   handleExcelDownload,
 }) => {
+  // Firestore의 현재 회사 문서에서 도장 URL 불러오기
+  const stampUrl =
+    (modalVendorDoc as VendorData & { 도장?: string }).도장 || "";
+
   return (
     <div className="modal-overlay fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
       <div className="modal-container bg-white w-full max-w-screen-md p-6 rounded shadow-lg relative page-break">
@@ -27,7 +31,10 @@ const Modal: React.FC<ModalProps> = ({
         >
           닫기
         </button>
-        <h2 className="text-left text-xl font-bold mb-4">거래명세표 ({modalDate})</h2>
+
+        <h2 className="text-left text-xl font-bold mb-4">
+          거래명세표 ({modalDate})
+        </h2>
 
         <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
           <div>
@@ -36,56 +43,107 @@ const Modal: React.FC<ModalProps> = ({
             <p>주소: {modalDoc.사업장주소}</p>
             <p>대표전화: {modalDoc.대표전화번호}</p>
           </div>
-          <div>
+
+          <div className="relative">
             <strong>공급하는자:</strong> {modalVendorDoc.상호명}
+
             <p>대표자: {modalVendorDoc.대표자}</p>
+
             <p>
-              사업자등록번호: 
-              {modalVendorDoc.사업자번호 || modalVendorDoc.사업자등록번호}
+              사업자등록번호:
+              {modalVendorDoc.사업자번호 ||
+                modalVendorDoc.사업자등록번호}
             </p>
+
             <p>대표전화: {modalVendorDoc.대표전화번호}</p>
+
             <p>주소: {modalVendorDoc.주소}</p>
+
+            {/* 현재 공급업체의 도장 */}
+            {stampUrl && (
+              <img
+                src={stampUrl}
+                alt={`${modalVendorDoc.상호명} 도장`}
+                className="absolute top-0 right-2 w-16 h-16 object-contain"
+              />
+            )}
           </div>
         </div>
 
         <table className="w-full border-collapse text-sm mb-4">
           <thead>
             <tr>
-              <th className="border px-2 py-1 text-left">품목</th>
-              <th className="border px-2 py-1 text-left">수량</th>
-              <th className="border px-2 py-1 text-left">계약단가</th>
-              <th className="border px-2 py-1 text-left">공급가액</th>
+              <th className="border px-2 py-1 text-left">
+                품목
+              </th>
+
+              <th className="border px-2 py-1 text-left">
+                수량
+              </th>
+
+              <th className="border px-2 py-1 text-left">
+                계약단가
+              </th>
+
+              <th className="border px-2 py-1 text-left">
+                공급가액
+              </th>
             </tr>
           </thead>
+
           <tbody>
             {(() => {
-              const items = modalDoc.품목.filter((it) => it.납품[modalDate]);
-              const unique = Array.from(
-                new Map(items.map((it) => [it.식품명, it])).values()
+              const items = modalDoc.품목.filter(
+                (it) => it.납품[modalDate]
               );
+
+              const unique = Array.from(
+                new Map(
+                  items.map((it) => [it.식품명, it])
+                ).values()
+              );
+
               return unique.map((it, idx) => {
                 const d = it.납품[modalDate];
+
                 return (
                   <tr key={idx}>
-                    <td className="border px-2 py-1 text-left">{it.식품명}</td>
-                    <td className="border px-2 py-1 text-left">{d.수량}</td>
-                    <td className="border px-2 py-1 text-left">{d.계약단가}</td>
-                    <td className="border px-2 py-1 text-left">{d.공급가액}</td>
+                    <td className="border px-2 py-1 text-left">
+                      {it.식품명}
+                    </td>
+
+                    <td className="border px-2 py-1 text-left">
+                      {d.수량}
+                    </td>
+
+                    <td className="border px-2 py-1 text-left">
+                      {d.계약단가}
+                    </td>
+
+                    <td className="border px-2 py-1 text-left">
+                      {d.공급가액}
+                    </td>
                   </tr>
                 );
               });
             })()}
           </tbody>
+
           <tfoot>
             <tr>
-              <td colSpan={3} className="border px-2 py-1 text-left font-bold">
+              <td
+                colSpan={3}
+                className="border px-2 py-1 text-left font-bold"
+              >
                 합계
               </td>
+
               <td className="border px-2 py-1 text-left font-bold">
                 {modalDoc.품목
                   .filter((it) => it.납품[modalDate])
                   .reduce((sum, it) => {
                     const d = it.납품[modalDate];
+
                     return sum + (d.공급가액 || 0);
                   }, 0)}
               </td>
@@ -103,7 +161,7 @@ const Modal: React.FC<ModalProps> = ({
 
           {/* 인쇄하기 버튼 추가 */}
           <button
-            onClick={() => window.print()}  // 인쇄 대화상자 열기
+            onClick={() => window.print()}
             className="px-4 py-2 bg-gray-500 text-white rounded cursor-pointer ml-4"
           >
             인쇄하기
